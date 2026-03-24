@@ -9,6 +9,8 @@
   "author": "Ezra Holloway, Ian Holbrook Katie Hickman, Joshu Garcia",
   "license": "MIT",
   "dependencies": {
+    "cors": "^2.8.6",
+    "ejs": "^5.0.1",
     "express": "^5.2.1"
   }
 }
