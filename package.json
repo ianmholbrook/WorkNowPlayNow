@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node ."
   },
-  "author": "Ezra Holloway, Ian Holbrook Katie Hickman, Joshu Garcia",
+  "author": "Ezra Holloway, Ian Holbrook, Katie Hickman, Joshu Garcia",
   "license": "MIT",
   "dependencies": {
     "cors": "^2.8.6",
