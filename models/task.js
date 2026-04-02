@@ -8,7 +8,7 @@ class Task {
   }
 }
 
-// In-memory storage right now (replace with SQL DB later)
+// In-memory storage right now (replace with SQLDB later)
 let tasks = [];
 let categories = ['Work', 'Personal', 'Health', '...']; 
 
