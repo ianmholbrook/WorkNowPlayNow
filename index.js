@@ -4,6 +4,8 @@ const path = require('path');
 const cors = require('cors');
 const ejs = require('ejs');
 
+const db = require("./lib/supabase.js");
+
 app.use(cors());
 app.use(express.json()); 
 app.use(express.static(path.join(__dirname, 'public')));
