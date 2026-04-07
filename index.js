@@ -9,6 +9,7 @@ const db = require("./lib/supabase.js");
 app.use(cors());
 app.use(express.json()); 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/auth', require('./routes/auth'));
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 

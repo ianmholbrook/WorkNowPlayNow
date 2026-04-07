@@ -3,7 +3,6 @@
 	<head>
 		<link rel="stylesheet" href="/styles/index.css">
 		<title>Work Now, Play Now</title>
-
 		<meta property="og:title" content="Work Now, Play Now">
 		<meta property="og:description" content="A planning app designed like a game, to help you meet your goals.">
 	</head>
@@ -13,38 +12,53 @@
 			<div class="logo"><span style="color: var(--primary-blue)">Work Now</span>, <span style="color: var(--primary-orange)">Play Now</span></div>
 			<div class="flex-spacer"></div>
 			<div class="banner-buttons">
-				<a class="dynamic-underline" style="--underline-padding: -2px;">Sign Up</a>
-				<a class="dynamic-underline" style="--underline-padding: -2px;">Login</a>
+				<button id="sign-up" class="dynamic-underline" style="--underline-padding: -2px;">Sign Up</button>
+				<button id="login" class="dynamic-underline" style="--underline-padding: -2px;">Login</button>
+				<button id="sign-out" class="dynamic-underline" style="--underline-padding: -2px;" hidden>Sign Out</button>
 			</div>
+			<div id="auth-status" class="auth-status">Not signed in</div>
 		</header>
 
-	<main>
-		<section class="hero">
-			<div class="hero-content">
-				<p class="tagline">A planning app designed like a game, to help you meet your goals.</p>
-				<button class="cta-button">Get Started</button>
+		<!-- Auth Modal -->
+		<div id="auth-modal" class="auth-modal" style="display: none;">
+			<div class="auth-modal-content">
+				<span class="auth-modal-close">&times;</span>
+				<h2 id="auth-modal-title">Sign Up</h2>
+				<form id="auth-form" class="auth-form">
+					<input type="email" id="email" placeholder="Email" required>
+					<input type="password" id="password" placeholder="Password" required>
+					<button type="submit" class="cta-button" id="auth-submit">Sign Up</button>
+				</form>
+				<div class="auth-divider">
+					<span>or</span>
+				</div>
+				<button id="google-auth" class="google-button">Continue with Google</button>
 			</div>
-		</section>
-
-		<section class="features">
-			<h2>How It Works</h2>
-			<div class="features-grid">
-				<div class="feature-card">
-					<h3>Gamified Tasks</h3>
-					<p>Turn your to-do list into an engaging game experience</p>
-				</div>
-				<div class="feature-card">
-					<h3>Goal Tracking</h3>
-					<p>Set ambitious goals and watch yourself achieve them</p>
-				</div>
-				<div class="feature-card">
-					<h3>Work-Life Balance</h3>
-					<p>Balance productivity with fun and leisure</p>
-				</div>
-			</div>
-		</section>
-	</main>
+		</div>
 		<main>
+			<section class="hero">
+				<div class="hero-content">
+					<p class="tagline">A planning app designed like a game, to help you meet your goals.</p>
+					<button class="cta-button">Get Started</button>
+				</div>
+			</section>
+			<section class="features">
+				<h2>How It Works</h2>
+				<div class="features-grid">
+					<div class="feature-card">
+						<h3>Gamified Tasks</h3>
+						<p>Turn your to-do list into an engaging game experience</p>
+					</div>
+					<div class="feature-card">
+						<h3>Goal Tracking</h3>
+						<p>Set ambitious goals and watch yourself achieve them</p>
+					</div>
+					<div class="feature-card">
+						<h3>Work-Life Balance</h3>
+						<p>Balance productivity with fun and leisure</p>
+					</div>
+				</div>
+			</section>
 			<div class="about-row">
 				<div class="about-wrapper">
 					<img src="https://picsum.photos/seed/theteam/1200/700" alt="1st">
@@ -73,5 +87,6 @@
 			</div>
 			<div>&copy; Copyright 2026 WorkNow-PlayNow Team</div>
 		</footer>
+		<script type="module" src="/js/auth.js"></script>
 	</body>
 </html>

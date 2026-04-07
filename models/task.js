@@ -1,16 +1,19 @@
 class Task {
-  constructor(id, created_at, title, category, description, completed = false) {
+  constructor(id, created_at, name, category, description, completed = false) {
     this.id = id;
-    this.created_at = created_at
-    this.title = title;
+    this.created_at = created_at;
+    this.name = name;
     this.category = category;
     this.description = description;
     this.completed = completed;
   }
 }
 
-// In-memory storage right now (replace with SQLDB later)
-let tasks = [];
-let categories = ['Work', 'Personal', 'Health', '...']; 
+let categories = [
+  { id: 1, name: 'Work' },
+  { id: 2, name: 'Personal' },
+  { id: 3, name: 'Health' },
+  { id: 4, name: 'Other' },
+];
 
-module.exports = { Task, tasks, categories };
+module.exports = { Task, categories };
