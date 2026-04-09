@@ -29,9 +29,9 @@ function updateUI(session) {
     ? `Signed in as ${session.user.email}`
     : 'Not signed in';
 
-  signUpBtn.hidden = signedIn;
-  loginBtn.hidden = signedIn;
-  signOutBtn.hidden = !signedIn;
+  if (signUpBtn) signUpBtn.hidden = signedIn;
+  if (loginBtn) loginBtn.hidden = signedIn;
+  if (signOutBtn) signOutBtn.hidden = !signedIn;
 }
 
 function openAuthModal(signUpMode = true) {
