@@ -1,79 +1,111 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../lib/supabase');
-const { categories } = require('../models/task');
+const { Task, categories } = require('../models/task');
 const requireAuth = require('../middlewares/auth');
 
-// To make tasks user-specific, add a user_id column to the Supabase tasks table:
-// user_id UUID REFERENCES auth.users(id)
 router.use(requireAuth);
 
-// GET /tasks - display only the signed-in user's tasks
-router.get('/', async (req, res) => {
+// GET /tasks - get all tasks for the signed-in user
+router.get('/', async (req, res, next) => {
   const { data, error } = await db
     .from('tasks')
-    .select('id,name,category,description,completed,created_at')
+    .select('id, created_at, title, description, status, category, goal_id, due_date, reminder_time, reminder_sent, user_id')
     .eq('user_id', req.user.id)
     .order('created_at', { ascending: false });
 
-  if (error) {
-    return res.status(500).json({ error: 'Unable to load tasks' });
-  }
+  if (error) return next(error);
 
-  res.json({ tasks: data ?? [], categories });
+  res.json({ tasks: data.map(Task.fromDB), categories });
 });
 
-// POST /tasks - add task for the signed-in user
-router.post('/', async (req, res) => {
-  const { name, category, description = '' } = req.body;
-  const categoryId = category !== undefined && category !== '' ? Number(category) : null;
-
-  if (!name) {
-    return res.status(400).json({ error: 'Name is required' });
-  }
-
-  if (categoryId !== null && Number.isNaN(categoryId)) {
-    return res.status(400).json({ error: 'Category must be a valid number' });
-  }
-
+// GET /tasks/:id - get a single task for the signed-in user
+router.get('/:id', async (req, res, next) => {
   const { data, error } = await db
     .from('tasks')
-    .insert([
-      {
-        user_id: req.user.id,
-        name,
-        category: categoryId,
-        description,
-        completed: false,
-      },
-    ])
-    .select();
-
-  if (error) {
-    return res.status(500).json({ error: 'Unable to save task' });
-  }
-
-  res.status(201).json(data[0]);
-});
-
-// PUT /tasks/:id/complete - mark a task complete for the signed-in user
-router.put('/:id/complete', async (req, res) => {
-  const { data, error } = await db
-    .from('tasks')
-    .update({ completed: true })
+    .select('id, created_at, title, description, status, category, goal_id, due_date, reminder_time, reminder_sent, user_id')
     .eq('id', req.params.id)
     .eq('user_id', req.user.id)
-    .select();
+    .single();
 
-  if (error) {
-    return res.status(500).json({ error: 'Unable to update task' });
+  if (error) return next(error);
+  if (!data) return res.status(404).json({ error: 'Task not found' });
+
+  res.json(Task.fromDB(data));
+});
+
+// POST /tasks - create a new task for the signed-in user
+router.post('/', async (req, res, next) => {
+  const { title, description = '', category = null, goal_id = null, due_date = null, reminder_time = null } = req.body;
+
+  if (!title) {
+    return res.status(400).json({ error: 'Title is required' });
   }
 
-  if (!data || data.length === 0) {
-    return res.status(404).json({ error: 'Task not found' });
+  const { data, error } = await db
+    .from('tasks')
+    .insert([{
+      user_id: req.user.id,
+      title,
+      description,
+      category,
+      goal_id,
+      due_date,
+      reminder_time,
+      status: 'pending',
+      reminder_sent: false,
+    }])
+    .select()
+    .single();
+
+  if (error) return next(error);
+
+  res.status(201).json(Task.fromDB(data));
+});
+
+// PUT /tasks/:id - update a task for the signed-in user
+router.put('/:id', async (req, res, next) => {
+  const { title, description, status, category, goal_id, due_date, reminder_time } = req.body;
+
+  const updates = {};
+  if (title !== undefined)         updates.title = title;
+  if (description !== undefined)   updates.description = description;
+  if (status !== undefined)        updates.status = status;
+  if (category !== undefined)      updates.category = category;
+  if (goal_id !== undefined)       updates.goal_id = goal_id;
+  if (due_date !== undefined)      updates.due_date = due_date;
+  if (reminder_time !== undefined) updates.reminder_time = reminder_time;
+
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ error: 'No valid fields provided to update' });
   }
 
-  res.json(data[0]);
+  const { data, error } = await db
+    .from('tasks')
+    .update(updates)
+    .eq('id', req.params.id)
+    .eq('user_id', req.user.id)
+    .select()
+    .single();
+
+  if (error) return next(error);
+  if (!data) return res.status(404).json({ error: 'Task not found' });
+
+  res.json(Task.fromDB(data));
+});
+
+// DELETE /tasks/:id - delete a task for the signed-in user
+router.delete('/:id', async (req, res, next) => {
+  const { error, count } = await db
+    .from('tasks')
+    .delete()
+    .eq('id', req.params.id)
+    .eq('user_id', req.user.id);
+
+  if (error) return next(error);
+  if (count === 0) return res.status(404).json({ error: 'Task not found' });
+
+  res.status(204).send();
 });
 
 module.exports = router;
