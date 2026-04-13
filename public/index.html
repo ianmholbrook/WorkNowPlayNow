@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Work Now, Play Now — Dashboard</title>
+  <title>Work Now, Play Now</title>
+  <meta property="og:title" content="Work Now, Play Now">
+  <meta property="og:description" content="A planning app designed like a game, to help you meet your goals.">
   <link rel="stylesheet" href="/styles/index.css">
   <link rel="icon" href="/favicon.ico">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -11,161 +13,131 @@
 <body>
 
   <header>
-    <img class="logo-img" src="/image/logo_512.png" alt="logo">
+    <img class="logo-img" src="/image/logo_512.png" alt="Work Now Play Now logo">
     <div class="logo-text">
       <span class="work">Work Now</span>, <span class="play">Play Now</span>
     </div>
     <div class="flex-spacer"></div>
-    <div id="header-badges" style="display:flex; gap:8px; align-items:center;">
-      <span class="streak-badge" id="header-streak">
-        <i data-lucide="flame" style="width:14px;height:14px;"></i> — day streak
-      </span>
-      <span class="points-badge" id="header-points">
-        <i data-lucide="star" style="width:14px;height:14px;"></i> — pts
-      </span>
-    </div>
-    <div class="banner-buttons" style="margin-left:16px;">
-      <button id="sign-out">Sign Out</button>
+    <div class="banner-buttons">
+      <button id="sign-up">Sign Up</button>
+      <button id="login">Login</button>
+      <button id="sign-out" hidden>Sign Out</button>
     </div>
     <div id="auth-status" class="auth-status"></div>
   </header>
 
-  <div class="app-layout">
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-section">Navigation</div>
-      <button class="sidebar-item active" data-view="tasks">
-        <span class="icon"><i data-lucide="check-square"></i></span> Tasks
+  <div id="auth-modal" class="auth-modal" style="display:none;">
+    <div class="auth-modal-content">
+      <span class="auth-modal-close">&times;</span>
+      <h2 id="auth-modal-title">Sign Up</h2>
+      <form id="auth-form" class="auth-form">
+        <input type="email" id="email" placeholder="Email address" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit" class="cta-button" id="auth-submit" style="width:100%; justify-content:center;">Sign Up</button>
+      </form>
+      <div class="auth-divider"><span>or</span></div>
+      <button id="google-auth" class="google-button">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+        Continue with Google
       </button>
-      <button class="sidebar-item" data-view="goals">
-        <span class="icon"><i data-lucide="target"></i></span> Goals
-      </button>
-
-      <div class="sidebar-section">Stats</div>
-      <div class="stat-card">
-        <div class="stat-label"><i data-lucide="flame" style="width:12px;height:12px;vertical-align:middle;"></i> Current Streak</div>
-        <div class="stat-value" id="sidebar-streak">—</div>
-        <div class="stat-sub" id="sidebar-streak-sub">days in a row</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label"><i data-lucide="star" style="width:12px;height:12px;vertical-align:middle;"></i> Total Points</div>
-        <div class="stat-value" id="sidebar-points">—</div>
-        <div class="stat-sub">lifetime earned</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label"><i data-lucide="clipboard-check" style="width:12px;height:12px;vertical-align:middle;"></i> Tasks Done</div>
-        <div class="stat-value" id="sidebar-tasks-done">—</div>
-        <div class="stat-sub">completed total</div>
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="app-main">
-
-      <!-- Tasks View -->
-      <div id="view-tasks">
-        <div class="app-main-header">
-          <h2>My Tasks</h2>
-          <button class="btn btn-primary" id="toggle-task-form">
-            <i data-lucide="plus" style="width:16px;height:16px;"></i> New Task
-          </button>
-        </div>
-
-        <!-- Add Task Form -->
-        <div id="task-form-wrapper" style="display:none;">
-          <form id="task-form" class="task-form">
-            <div>
-              <div class="task-form-title">Task Title *</div>
-              <input type="text" id="task-title" placeholder="What needs to be done?" required>
-            </div>
-            <div>
-              <div class="task-form-title">Category</div>
-              <select id="task-category">
-                <option value="">No category</option>
-              </select>
-            </div>
-            <div>
-              <div class="task-form-title">Goal (optional)</div>
-              <select id="task-goal">
-                <option value="">No goal</option>
-              </select>
-            </div>
-            <div>
-              <div class="task-form-title">Due Date (optional)</div>
-              <input type="datetime-local" id="task-due-date">
-            </div>
-            <div class="full-width">
-              <div class="task-form-title">Description (optional)</div>
-              <textarea id="task-description" placeholder="Any extra details..."></textarea>
-            </div>
-            <div class="full-width" style="display:flex; gap:10px; justify-content:flex-end;">
-              <button type="button" class="btn btn-ghost" id="cancel-task-form">Cancel</button>
-              <button type="submit" class="btn btn-primary">
-                <i data-lucide="plus" style="width:15px;height:15px;"></i> Add Task
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Filter bar -->
-        <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
-          <button class="btn btn-secondary filter-btn active" data-filter="all">All</button>
-          <button class="btn btn-secondary filter-btn" data-filter="pending">Pending</button>
-          <button class="btn btn-secondary filter-btn" data-filter="in_progress">In Progress</button>
-          <button class="btn btn-secondary filter-btn" data-filter="completed">Completed</button>
-        </div>
-
-        <div id="tasks-container" class="tasks-grid"></div>
-      </div>
-
-      <!-- Goals View -->
-      <div id="view-goals" style="display:none;">
-        <div class="app-main-header">
-          <h2>My Goals</h2>
-          <button class="btn btn-primary" id="toggle-goal-form">
-            <i data-lucide="plus" style="width:16px;height:16px;"></i> New Goal
-          </button>
-        </div>
-
-        <!-- Add Goal Form -->
-        <div id="goal-form-wrapper" style="display:none;">
-          <form id="goal-form" class="task-form">
-            <div class="full-width">
-              <div class="task-form-title">Goal Title *</div>
-              <input type="text" id="goal-title" placeholder="What do you want to achieve?" required>
-            </div>
-            <div class="full-width">
-              <div class="task-form-title">Description (optional)</div>
-              <textarea id="goal-description" placeholder="Describe your goal..."></textarea>
-            </div>
-            <div class="full-width" style="display:flex; gap:10px; justify-content:flex-end;">
-              <button type="button" class="btn btn-ghost" id="cancel-goal-form">Cancel</button>
-              <button type="submit" class="btn btn-primary">
-                <i data-lucide="plus" style="width:15px;height:15px;"></i> Add Goal
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <div id="goals-container" class="tasks-grid"></div>
-      </div>
-
-    </main>
+    </div>
   </div>
 
-  <!-- Toast container -->
-  <div class="toast-container" id="toast-container"></div>
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <span class="tag eyebrow">Gamified Productivity</span>
+        <h1>Do the work.<br><span class="accent-orange">Earn the play.</span></h1>
+        <p class="tagline">Turn your goals into quests, your tasks into victories, and your consistency into rewards.</p>
+        <div class="hero-actions">
+          <button class="cta-button" id="hero-signup">Get Started — It is Free</button>
+          <button class="btn btn-secondary" id="hero-login">Sign In</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="features">
+      <h2>How It Works</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="icon"><i data-lucide="target"></i></div>
+          <h3>Set Goals</h3>
+          <p>Break big ambitions into structured goals with clear milestones and deadlines.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon"><i data-lucide="check-circle"></i></div>
+          <h3>Complete Tasks</h3>
+          <p>Knock out daily tasks, earn points, and watch your progress compound over time.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon"><i data-lucide="flame"></i></div>
+          <h3>Build Streaks</h3>
+          <p>Log in every day to keep your streak alive and unlock milestone bonuses.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon"><i data-lucide="trophy"></i></div>
+          <h3>Earn Rewards</h3>
+          <p>Finishing priority tasks unlocks rewards because balance is the real win.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon"><i data-lucide="bar-chart-2"></i></div>
+          <h3>Track Progress</h3>
+          <p>Weekly and monthly summaries show you exactly how far you have come.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon"><i data-lucide="calendar"></i></div>
+          <h3>Calendar Sync</h3>
+          <p>Integrate with Google or Apple Calendar to keep tasks and life in one place.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="about-row">
+        <div class="about-wrapper">
+          <img src="https://picsum.photos/seed/theteam/1200/700" alt="The Team">
+          <span>The Team</span>
+        </div>
+        <div class="blurb">
+          <h2 style="margin-bottom:16px;">Built by students,<br>for everyone.</h2>
+          Work Now, Play Now was born out of a simple frustration — productivity apps are boring.
+          We are a team of software engineering students who believe that getting things done should
+          feel rewarding, not draining. So we built the app we always wanted.
+        </div>
+      </div>
+      <div class="about-row reverse">
+        <div class="about-wrapper">
+          <img src="https://picsum.photos/seed/themission/1200/700" alt="The Mission">
+          <span>The Mission</span>
+        </div>
+        <div class="blurb">
+          <h2 style="margin-bottom:16px;">Work hard.<br><span style="color:var(--orange);">Play harder.</span></h2>
+          Our mission is simple: help people build habits that stick by making the process
+          genuinely enjoyable. Points, streaks, rewards — every feature is designed to keep
+          you motivated and moving forward, one task at a time.
+        </div>
+      </div>
+    </section>
+  </main>
 
   <footer>
     <div class="footer-links">
       <a href="#">Privacy Policy</a>
       <a href="#">Terms of Service</a>
+      <a href="#">Contact</a>
     </div>
     <div>&copy; 2026 Work Now, Play Now. All rights reserved.</div>
   </footer>
 
   <script type="module" src="/js/auth.js"></script>
+  <script type="module">
+    document.getElementById("hero-signup")?.addEventListener("click", () => {
+      document.getElementById("sign-up")?.click();
+    });
+    document.getElementById("hero-login")?.addEventListener("click", () => {
+      document.getElementById("login")?.click();
+    });
+  </script>
   <script>lucide.createIcons();</script>
 
 </body>
