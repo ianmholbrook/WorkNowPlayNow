@@ -1,78 +1,64 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../lib/supabase');
+const { getAuthClient } = require('../lib/supabase');
 const { Goal, GoalProgress } = require('../models/goal');
 const { awardPoints } = require('../lib/points');
 const requireAuth = require('../middlewares/auth');
 
 router.use(requireAuth);
 
-// GET /goals - get all goals for the signed-in user (with latest progress)
+// GET /goals
 router.get('/', async (req, res, next) => {
+  const db = getAuthClient(req.token);
   const { data, error } = await db
     .from('goals')
-    .select(`
-      id, created_at, title, description, completed, user_id,
-      goal_progress ( id, percent_complete, updated_at )
-    `)
+    .select(`id, created_at, title, description, completed, user_id,
+      goal_progress ( id, percent_complete, updated_at )`)
     .eq('user_id', req.user.id)
     .order('created_at', { ascending: false });
 
   if (error) return next(error);
-
   res.json({ goals: data.map(row => ({
     ...Goal.fromDB(row).toJSON(),
     progress: row.goal_progress?.at(-1) ?? null,
   }))});
 });
 
-// GET /goals/:id - get a single goal with full progress history
+// GET /goals/:id
 router.get('/:id', async (req, res, next) => {
+  const db = getAuthClient(req.token);
   const { data, error } = await db
     .from('goals')
-    .select(`
-      id, created_at, title, description, completed, user_id,
-      goal_progress ( id, percent_complete, updated_at )
-    `)
+    .select(`id, created_at, title, description, completed, user_id,
+      goal_progress ( id, percent_complete, updated_at )`)
     .eq('id', req.params.id)
     .eq('user_id', req.user.id)
     .single();
 
   if (error) return next(error);
   if (!data) return res.status(404).json({ error: 'Goal not found' });
-
-  res.json({
-    ...Goal.fromDB(data).toJSON(),
-    progress_history: data.goal_progress ?? [],
-  });
+  res.json({ ...Goal.fromDB(data).toJSON(), progress_history: data.goal_progress ?? [] });
 });
 
-// POST /goals - create a new goal
+// POST /goals
 router.post('/', async (req, res, next) => {
+  const db = getAuthClient(req.token);
   const { title, description = '' } = req.body;
-
-  if (!title) {
-    return res.status(400).json({ error: 'Title is required' });
-  }
+  if (!title) return res.status(400).json({ error: 'Title is required' });
 
   const { data, error } = await db
     .from('goals')
-    .insert([{
-      user_id: req.user.id,
-      title,
-      description,
-      completed: false,
-    }])
+    .insert([{ user_id: req.user.id, title, description, completed: false }])
     .select()
     .single();
 
   if (error) return next(error);
-
   res.status(201).json(Goal.fromDB(data));
 });
 
-// PUT /goals/:id - update a goal
+// PUT /goals/:id
 router.put('/:id', async (req, res, next) => {
+  const db = getAuthClient(req.token);
   const { title, description, completed } = req.body;
 
   const updates = {};
@@ -95,21 +81,21 @@ router.put('/:id', async (req, res, next) => {
   if (error) return next(error);
   if (!data) return res.status(404).json({ error: 'Goal not found' });
 
-  // Award points when a goal is marked completed
   let pointsAwarded = null;
   if (completed === true) {
     try {
-      pointsAwarded = await awardPoints(req.user.id, 'goal', data.id);
-    } catch (pointsError) {
-      console.error('Points award failed:', pointsError.message);
+      pointsAwarded = await awardPoints(req.user.id, 'goal', data.id, req.token);
+    } catch (err) {
+      console.error('Points award failed:', err.message);
     }
   }
 
   res.json({ ...Goal.fromDB(data).toJSON(), pointsAwarded });
 });
 
-// DELETE /goals/:id - delete a goal (cascades to goal_progress)
+// DELETE /goals/:id
 router.delete('/:id', async (req, res, next) => {
+  const db = getAuthClient(req.token);
   const { error } = await db
     .from('goals')
     .delete()
@@ -117,12 +103,12 @@ router.delete('/:id', async (req, res, next) => {
     .eq('user_id', req.user.id);
 
   if (error) return next(error);
-
   res.status(204).send();
 });
 
-// POST /goals/:id/progress - record a new progress entry
+// POST /goals/:id/progress
 router.post('/:id/progress', async (req, res, next) => {
+  const db = getAuthClient(req.token);
   const { percent_complete } = req.body;
 
   if (percent_complete === undefined || percent_complete === null) {
@@ -145,24 +131,19 @@ router.post('/:id/progress', async (req, res, next) => {
 
   const { data, error } = await db
     .from('goal_progress')
-    .insert([{
-      goal_id: req.params.id,
-      percent_complete: value,
-      updated_at: new Date().toISOString(),
-    }])
+    .insert([{ goal_id: req.params.id, percent_complete: value, updated_at: new Date().toISOString() }])
     .select()
     .single();
 
   if (error) return next(error);
 
-  // Auto-complete the goal and award points if progress hits 100%
   let pointsAwarded = null;
   if (value === 100 && !goal.completed) {
     await db.from('goals').update({ completed: true }).eq('id', req.params.id);
     try {
-      pointsAwarded = await awardPoints(req.user.id, 'goal', req.params.id);
-    } catch (pointsError) {
-      console.error('Points award failed:', pointsError.message);
+      pointsAwarded = await awardPoints(req.user.id, 'goal', req.params.id, req.token);
+    } catch (err) {
+      console.error('Points award failed:', err.message);
     }
   }
 

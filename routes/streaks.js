@@ -5,23 +5,20 @@ const requireAuth = require('../middlewares/auth');
 
 router.use(requireAuth);
 
-// POST /streaks/login - call this every time the user authenticates
-// Returns current streak, longest streak, and any milestone bonus earned
+// POST /streaks/login
 router.post('/login', async (req, res, next) => {
   try {
-    console.log('User ID:', req.user.id);
-    const result = await recordLogin(req.user.id);
+    const result = await recordLogin(req.user.id, req.token);
     res.json(result);
   } catch (err) {
-    console.error('Streak error:', err);
     next(err);
   }
 });
 
-// GET /streaks - get the current streak info for the signed-in user
+// GET /streaks
 router.get('/', async (req, res, next) => {
   try {
-    const streak = await getStreak(req.user.id);
+    const streak = await getStreak(req.user.id, req.token);
     res.json(streak);
   } catch (err) {
     next(err);
