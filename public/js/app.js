@@ -37,6 +37,20 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
+// Inline SVG icon helper — keeps dynamic content consistent with Lucide style
+function icon(name, size = 14) {
+  const icons = {
+    'play':          `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+    'check':         `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    'x':             `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    'clock':         `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    'tag':           `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
+    'target':        `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+    'clipboard':     `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>`,
+  };
+  return icons[name] ?? '';
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 
 let allTasks      = [];
@@ -63,9 +77,9 @@ function renderTasks() {
   if (!filtered.length) {
     container.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1">
-        <div class="empty-icon">📋</div>
+        <div class="empty-icon">${icon('clipboard', 40)}</div>
         <h3>No tasks here</h3>
-        <p>${currentFilter === 'all' ? 'Add your first task to get started.' : `No ${currentFilter.replace('_',' ')} tasks.`}</p>
+        <p>${currentFilter === 'all' ? 'Add your first task to get started.' : `No ${currentFilter.replace('_', ' ')} tasks.`}</p>
       </div>`;
     return;
   }
@@ -75,17 +89,34 @@ function renderTasks() {
       <div class="task-title">${escapeHtml(task.title)}</div>
       <div class="task-meta">
         <span class="task-status ${task.status}">${task.status.replace('_', ' ')}</span>
-        ${getCategoryName(task.category_id) ? `<span class="task-category">${escapeHtml(getCategoryName(task.category_id))}</span>` : ''}
-        ${getGoalTitle(task.goal_id) ? `<span class="task-category" style="background:rgba(255,107,53,0.1);color:var(--orange);border-color:rgba(255,107,53,0.25);">🎯 ${escapeHtml(getGoalTitle(task.goal_id))}</span>` : ''}
+        ${getCategoryName(task.category_id) ? `
+          <span class="task-category">
+            ${icon('tag', 11)} ${escapeHtml(getCategoryName(task.category_id))}
+          </span>` : ''}
+        ${getGoalTitle(task.goal_id) ? `
+          <span class="task-category" style="background:rgba(255,107,53,0.1);color:var(--orange);border-color:rgba(255,107,53,0.25);">
+            ${icon('target', 11)} ${escapeHtml(getGoalTitle(task.goal_id))}
+          </span>` : ''}
       </div>
       ${task.description ? `<div class="task-description">${escapeHtml(task.description)}</div>` : ''}
-      ${task.due_date ? `<div class="task-description" style="color:#ffc800;">⏰ Due ${new Date(task.due_date).toLocaleDateString()}</div>` : ''}
+      ${task.due_date ? `
+        <div class="task-description" style="color:#ffc800;display:flex;align-items:center;gap:5px;">
+          ${icon('clock', 13)} Due ${new Date(task.due_date).toLocaleDateString()}
+        </div>` : ''}
       <div class="task-actions">
         ${task.status !== 'completed' ? `
-          ${task.status === 'pending' ? `<button class="complete-button" data-action="progress" data-id="${task.id}">▶ Start</button>` : ''}
-          ${task.status === 'in_progress' ? `<button class="complete-button" data-action="complete" data-id="${task.id}">✓ Complete</button>` : ''}
-        ` : '<button class="complete-button" disabled>✓ Done</button>'}
-        <button class="btn btn-danger" style="padding:8px 12px;font-size:13px;" data-action="delete" data-id="${task.id}">✕</button>
+          ${task.status === 'pending' ? `
+            <button class="complete-button" data-action="progress" data-id="${task.id}">
+              ${icon('play', 13)} Start
+            </button>` : ''}
+          ${task.status === 'in_progress' ? `
+            <button class="complete-button" data-action="complete" data-id="${task.id}">
+              ${icon('check', 13)} Complete
+            </button>` : ''}
+        ` : `<button class="complete-button" disabled>${icon('check', 13)} Done</button>`}
+        <button class="btn btn-danger" style="padding:8px 12px;font-size:13px;" data-action="delete" data-id="${task.id}">
+          ${icon('x', 13)}
+        </button>
       </div>
     </div>
   `).join('');
@@ -98,7 +129,7 @@ function renderGoals() {
   if (!allGoals.length) {
     container.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1">
-        <div class="empty-icon">🎯</div>
+        <div class="empty-icon">${icon('target', 40)}</div>
         <h3>No goals yet</h3>
         <p>Set your first goal to start tracking progress.</p>
       </div>`;
@@ -111,7 +142,7 @@ function renderGoals() {
     <div class="goal-card" data-id="${goal.id}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
         <div class="task-title">${escapeHtml(goal.title)}</div>
-        ${goal.completed ? '<span class="task-status completed">✓ Complete</span>' : ''}
+        ${goal.completed ? '<span class="task-status completed">Complete</span>' : ''}
       </div>
       ${goal.description ? `<div class="task-description" style="color:rgba(255,255,255,0.4);">${escapeHtml(goal.description)}</div>` : ''}
       <div style="margin-top:4px;">
@@ -128,10 +159,14 @@ function renderGoals() {
           placeholder="%" style="width:80px;padding:6px 10px;font-size:13px;"
           class="goal-progress-input" data-id="${goal.id}">
         <button class="complete-button" data-action="update-progress" data-id="${goal.id}">Update</button>
-        <button class="btn btn-danger" style="padding:8px 12px;font-size:13px;" data-action="delete-goal" data-id="${goal.id}">✕</button>
+        <button class="btn btn-danger" style="padding:8px 12px;font-size:13px;" data-action="delete-goal" data-id="${goal.id}">
+          ${icon('x', 13)}
+        </button>
       </div>` : `
       <div class="task-actions" style="margin-top:8px;">
-        <button class="btn btn-danger" style="padding:8px 12px;font-size:13px;" data-action="delete-goal" data-id="${goal.id}">✕</button>
+        <button class="btn btn-danger" style="padding:8px 12px;font-size:13px;" data-action="delete-goal" data-id="${goal.id}">
+          ${icon('x', 13)}
+        </button>
       </div>`}
     </div>`;
   }).join('');
@@ -181,16 +216,19 @@ async function loadStats() {
       document.getElementById('sidebar-streak').textContent = streak.current_streak;
       document.getElementById('sidebar-streak-sub').textContent =
         `day${streak.current_streak !== 1 ? 's' : ''} in a row`;
-      document.getElementById('header-streak').textContent =
-        `🔥 ${streak.current_streak} day streak`;
+      document.getElementById('header-streak').innerHTML =
+        `<i data-lucide="flame" style="width:14px;height:14px;"></i> ${streak.current_streak} day streak`;
       if (streak.milestoneReached) {
-        toast(`🎉 ${streak.milestoneReached}-day streak! +${streak.pointsAwarded?.points ?? 0} bonus pts`, 'success');
+        toast(`${streak.milestoneReached}-day streak milestone! +${streak.pointsAwarded?.points ?? 0} bonus pts`, 'success');
       }
+      lucide.createIcons();
     }
     const pts = await apiFetch('/points');
     if (pts) {
       document.getElementById('sidebar-points').textContent = pts.total;
-      document.getElementById('header-points').textContent = `⭐ ${pts.total} pts`;
+      document.getElementById('header-points').innerHTML =
+        `<i data-lucide="star" style="width:14px;height:14px;"></i> ${pts.total} pts`;
+      lucide.createIcons();
     }
   } catch (err) {
     console.error('Stats load failed:', err.message);
@@ -228,9 +266,7 @@ async function addTask(e) {
   const goal_id     = document.getElementById('task-goal')?.value || null;
   const description = document.getElementById('task-description')?.value.trim() || '';
   const due_date    = document.getElementById('task-due-date')?.value || null;
-
   if (!title) return;
-
   try {
     await apiFetch('/tasks', {
       method: 'POST',
@@ -238,7 +274,7 @@ async function addTask(e) {
     });
     document.getElementById('task-form').reset();
     document.getElementById('task-form-wrapper').style.display = 'none';
-    toast('Task added! Complete it to earn points 🎯', 'success');
+    toast('Task added! Complete it to earn points', 'success');
     await loadTasks();
   } catch (err) {
     toast(err.message, 'error');
@@ -252,11 +288,13 @@ async function updateTaskStatus(taskId, status) {
       body: JSON.stringify({ status }),
     });
     if (status === 'completed' && data?.pointsAwarded) {
-      toast(`✅ Task complete! +${data.pointsAwarded.points} pts (Total: ${data.pointsAwarded.total})`, 'success');
+      toast(`Task complete! +${data.pointsAwarded.points} pts (Total: ${data.pointsAwarded.total})`, 'success');
       document.getElementById('sidebar-points').textContent = data.pointsAwarded.total;
-      document.getElementById('header-points').textContent = `⭐ ${data.pointsAwarded.total} pts`;
+      document.getElementById('header-points').innerHTML =
+        `<i data-lucide="star" style="width:14px;height:14px;"></i> ${data.pointsAwarded.total} pts`;
+      lucide.createIcons();
     } else {
-      toast('Task updated!', 'info');
+      toast('Task updated', 'info');
     }
     await loadTasks();
   } catch (err) {
@@ -288,7 +326,7 @@ async function addGoal(e) {
     });
     document.getElementById('goal-form').reset();
     document.getElementById('goal-form-wrapper').style.display = 'none';
-    toast('Goal created! 🎯', 'success');
+    toast('Goal created!', 'success');
     await loadGoals();
   } catch (err) {
     toast(err.message, 'error');
@@ -302,9 +340,11 @@ async function updateGoalProgress(goalId, percent) {
       body: JSON.stringify({ percent_complete: percent }),
     });
     if (data?.pointsAwarded) {
-      toast(`🏆 Goal complete! +${data.pointsAwarded.points} pts`, 'success');
+      toast(`Goal complete! +${data.pointsAwarded.points} pts`, 'success');
       document.getElementById('sidebar-points').textContent = data.pointsAwarded.total;
-      document.getElementById('header-points').textContent = `⭐ ${data.pointsAwarded.total} pts`;
+      document.getElementById('header-points').innerHTML =
+        `<i data-lucide="star" style="width:14px;height:14px;"></i> ${data.pointsAwarded.total} pts`;
+      lucide.createIcons();
     } else {
       toast(`Progress updated to ${percent}%`, 'info');
     }
