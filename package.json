@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node ."
   },
-  "author": "Ezra Holloway, Ian Holbrook, Katie Hickman, Joshu Garcia",
+  "author": "Ezra Holloway, Ian Holbrook Katie Hickman, Joshua Garcia",
   "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.102.1",
