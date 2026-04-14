@@ -11,12 +11,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
-app.use('/auth',       require('./routes/auth'));
-app.use('/tasks',      require('./routes/tasks'));
-app.use('/goals',      require('./routes/goals'));
-app.use('/points',     require('./routes/points'));
-app.use('/streaks',    require('./routes/streaks'));
-app.use('/categories', require('./routes/categories'));
+app.use('/auth',         require('./routes/auth'));
+app.use('/tasks',        require('./routes/tasks'));
+app.use('/goals',        require('./routes/goals'));
+app.use('/points',       require('./routes/points'));
+app.use('/streaks',      require('./routes/streaks'));
+app.use('/categories',   require('./routes/categories'));
+app.use('/achievements', require('./routes/achievements'));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

@@ -58,11 +58,12 @@ function icon(name, size = 14) {
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-let allTasks        = [];
-let allGoals        = [];
-let allCategories   = [];
-let allAchievements = [];
-let currentFilter   = 'all';
+let allTasks            = [];
+let allGoals            = [];
+let allCategories       = [];
+let allAchievements     = [];
+let achievementProgress = {};
+let currentFilter       = 'all';
 
 // ── Tier config ───────────────────────────────────────────────────────────────
 
@@ -72,6 +73,49 @@ const TIER = {
   gold:     { label: 'Gold',     color: '#ffd700', glow: 'rgba(255,215,0,0.15)',   border: 'rgba(255,215,0,0.3)'   },
   platinum: { label: 'Platinum', color: '#e5e4e2', glow: 'rgba(229,228,226,0.15)', border: 'rgba(229,228,226,0.3)' },
 };
+
+// ── Achievement progress mapping ──────────────────────────────────────────────
+// Given an achievement key and user progress context, returns { current, required }
+
+function getAchievementProgress(key, progress) {
+  const p = progress || achievementProgress;
+
+  // streak_N
+  if (key.startsWith('streak_')) {
+    const required = parseInt(key.split('_')[1]);
+    return { current: Math.min(p.streak ?? 0, required), required };
+  }
+  // tasks_N
+  if (key.startsWith('tasks_')) {
+    const required = parseInt(key.split('_')[1]);
+    return { current: Math.min(p.tasks ?? 0, required), required };
+  }
+  // goals_N
+  if (key.startsWith('goals_')) {
+    const required = parseInt(key.split('_')[1]);
+    return { current: Math.min(p.goals ?? 0, required), required };
+  }
+  // points_N
+  if (key.startsWith('points_')) {
+    const required = parseInt(key.split('_')[1]);
+    return { current: Math.min(p.points ?? 0, required), required };
+  }
+  // daily_N
+  if (key.startsWith('daily_')) {
+    const required = parseInt(key.split('_')[1]);
+    return { current: Math.min(p.tasksToday ?? 0, required), required };
+  }
+  // speed_1hour
+  if (key === 'speed_1hour') {
+    return { current: Math.min(p.quickTasks ?? 0, 1), required: 1 };
+  }
+  // speed_10
+  if (key === 'speed_10') {
+    return { current: Math.min(p.quickTasks ?? 0, 10), required: 10 };
+  }
+  // early_bird / night_owl — binary, no numeric progress
+  return null;
+}
 
 // ── Goal Progress (derived) ───────────────────────────────────────────────────
 
@@ -239,7 +283,7 @@ function renderAchievements() {
         <div style="grid-column:1/-1;margin-top:8px;">
           <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;
             color:rgba(255,255,255,0.2);margin-bottom:12px;">${cat.label}</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
             ${items.map(a => renderAchievementCard(a)).join('')}
           </div>
         </div>`;
@@ -250,46 +294,83 @@ function renderAchievements() {
 function renderAchievementCard(a) {
   const tier   = TIER[a.tier] ?? TIER.bronze;
   const locked = !a.unlocked;
+  const prog   = locked ? getAchievementProgress(a.key, achievementProgress) : null;
+  const pct    = prog ? Math.round((prog.current / prog.required) * 100) : 0;
+
   return `
     <div style="
-      background:${locked ? 'rgba(0,0,0,0.15)' : tier.glow};
-      border:1px solid ${locked ? 'rgba(255,255,255,0.05)' : tier.border};
-      border-radius:var(--radius);padding:16px;
-      display:flex;gap:14px;align-items:flex-start;
-      opacity:${locked ? '0.5' : '1'};
+      background:${locked ? 'rgba(0,0,0,0.2)' : tier.glow};
+      border:1px solid ${locked ? 'rgba(255,255,255,0.06)' : tier.border};
+      border-radius:var(--radius);
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
       transition:var(--transition);
     ">
-      <div style="
-        width:40px;height:40px;flex-shrink:0;
-        border-radius:var(--radius-sm);
-        background:${locked ? 'rgba(255,255,255,0.04)' : tier.glow};
-        border:1px solid ${locked ? 'rgba(255,255,255,0.08)' : tier.border};
-        display:flex;align-items:center;justify-content:center;
-        color:${locked ? 'rgba(255,255,255,0.2)' : tier.color};
-      ">
-        ${locked
-          ? icon('lock', 16)
-          : `<i data-lucide="${a.icon}" style="width:18px;height:18px;stroke:${tier.color};"></i>`}
-      </div>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
-          <span style="font-size:14px;font-weight:600;color:${locked ? 'rgba(255,255,255,0.4)' : '#f0f0f5'};">
-            ${escapeHtml(a.title)}
-          </span>
-          <span style="
-            font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
-            padding:1px 7px;border-radius:99px;
-            color:${tier.color};background:${tier.glow};border:1px solid ${tier.border};
-          ">${tier.label}</span>
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <!-- Icon -->
+        <div style="
+          width:40px;height:40px;flex-shrink:0;
+          border-radius:var(--radius-sm);
+          background:${locked ? 'rgba(255,255,255,0.04)' : tier.glow};
+          border:1px solid ${locked ? 'rgba(255,255,255,0.08)' : tier.border};
+          display:flex;align-items:center;justify-content:center;
+          color:${locked ? 'rgba(255,255,255,0.15)' : tier.color};
+        ">
+          ${locked
+            ? icon('lock', 16)
+            : `<i data-lucide="${a.icon}" style="width:18px;height:18px;stroke:${tier.color};"></i>`}
         </div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:6px;">${escapeHtml(a.description)}</div>
-        <div style="font-size:12px;color:${locked ? 'rgba(255,255,255,0.2)' : 'var(--orange)'};">
-          ${icon('trophy', 11)} +${a.points} pts
-          ${a.unlocked && a.unlocked_at
-            ? `<span style="color:rgba(255,255,255,0.2);margin-left:8px;">Unlocked ${new Date(a.unlocked_at).toLocaleDateString()}</span>`
-            : ''}
+
+        <!-- Text -->
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+            <span style="font-size:14px;font-weight:600;color:${locked ? 'rgba(255,255,255,0.3)' : '#f0f0f5'};">
+              ${escapeHtml(a.title)}
+            </span>
+            <span style="
+              font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
+              padding:1px 7px;border-radius:99px;
+              color:${locked ? 'rgba(255,255,255,0.2)' : tier.color};
+              background:${locked ? 'rgba(255,255,255,0.04)' : tier.glow};
+              border:1px solid ${locked ? 'rgba(255,255,255,0.08)' : tier.border};
+            ">${tier.label}</span>
+          </div>
+          <div style="font-size:12px;color:${locked ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)'};margin-bottom:4px;">
+            ${escapeHtml(a.description)}
+          </div>
+          <div style="font-size:12px;color:${locked ? 'rgba(255,255,255,0.15)' : 'var(--orange)'};">
+            ${icon('trophy', 11)} +${a.points} pts
+            ${a.unlocked && a.unlocked_at
+              ? `<span style="color:rgba(255,255,255,0.2);margin-left:8px;">
+                  Unlocked ${new Date(a.unlocked_at).toLocaleDateString()}
+                </span>`
+              : ''}
+          </div>
         </div>
       </div>
+
+      <!-- Progress bar (locked achievements with numeric progress only) -->
+      ${locked && prog ? `
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;
+            color:rgba(255,255,255,0.2);margin-bottom:5px;">
+            <span>Progress</span>
+            <span>${prog.current.toLocaleString()} / ${prog.required.toLocaleString()}</span>
+          </div>
+          <div style="height:3px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;">
+            <div style="
+              height:100%;
+              width:${pct}%;
+              background:${tier.color};
+              border-radius:99px;
+              opacity:0.5;
+              transition:width 600ms ease;
+            "></div>
+          </div>
+        </div>
+      ` : ''}
     </div>`;
 }
 
@@ -390,7 +471,8 @@ async function loadAchievements() {
   try {
     const data = await apiFetch('/achievements');
     if (!data) return;
-    allAchievements = data.achievements ?? [];
+    allAchievements     = data.achievements ?? [];
+    achievementProgress = data.progress ?? {};
     renderAchievements();
     lucide.createIcons();
   } catch (err) {
