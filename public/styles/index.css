@@ -775,3 +775,21 @@ footer {
   .about-row { flex-direction: column; }
   .task-form { grid-template-columns: 1fr; }
 }
+
+/* Fix filter button colors on dark dashboard */
+.app-main .filter-btn.btn-secondary {
+  color: rgba(255,255,255,0.85);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.app-main .filter-btn.btn-secondary:hover {
+  background: rgba(255,255,255,0.08);
+  color: #ffffff;
+}
+
+/* Active state */
+.app-main .filter-btn.active {
+  background: var(--orange);
+  color: #ffffff;
+  border-color: var(--orange);
+}

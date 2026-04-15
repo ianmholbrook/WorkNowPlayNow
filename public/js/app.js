@@ -52,8 +52,94 @@ function icon(name, size = 14) {
     'clipboard': `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>`,
     'trophy':    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 21 12 17 16 21"/><line x1="12" y1="17" x2="12" y2="11"/><path d="M7 4H4a1 1 0 0 0-1 1v3a4 4 0 0 0 4 4h1"/><path d="M17 4h3a1 1 0 0 1 1 1v3a4 4 0 0 1-4 4h-1"/><rect x="7" y="2" width="10" height="9" rx="1"/></svg>`,
     'lock':      `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+    'calendar':  `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
   };
   return icons[name] ?? '';
+}
+
+// ── Google Calendar ───────────────────────────────────────────────────────────
+
+const GOOGLE_CLIENT_ID = '263983146208-cu7dmrc73um08jej3hl93h2lml3228bb.apps.googleusercontent.com';
+const CALENDAR_SCOPE   = 'https://www.googleapis.com/auth/calendar.events';
+let   _calendarToken   = null;
+
+function getCalendarToken() {
+  return new Promise((resolve, reject) => {
+    if (!window.google?.accounts?.oauth2) {
+      reject(new Error('Google Identity Services not loaded'));
+      return;
+    }
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope:     CALENDAR_SCOPE,
+      callback:  (response) => {
+        if (response.error) {
+          reject(new Error(response.error));
+          return;
+        }
+        _calendarToken = response.access_token;
+        resolve(response.access_token);
+      },
+    });
+    client.requestAccessToken();
+  });
+}
+
+async function addTaskToCalendar(task) {
+  if (!task.due_date) {
+    toast('Add a due date to this task before scheduling it', 'error');
+    return;
+  }
+
+  try {
+    toast('Connecting to Google Calendar...', 'info');
+    const token = await getCalendarToken();
+
+    const start = new Date(task.due_date);
+    const end   = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour duration
+
+    const event = {
+      summary:     task.title,
+      description: task.description || '',
+      start: { dateTime: start.toISOString(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+      end:   { dateTime: end.toISOString(),   timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+    };
+
+    const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      method:  'POST',
+      headers: {
+        Authorization:  `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(event),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || 'Calendar API error');
+    }
+
+    const created = await res.json();
+
+    // Save the calendar event ID on the task so the button shows "Added"
+    await apiFetch(`/tasks/${task.id}`, {
+      method: 'PUT',
+      body:   JSON.stringify({ calendar_event_id: created.id }),
+    });
+
+    // Update local state immediately
+    const local = allTasks.find(t => t.id === task.id);
+    if (local) local.calendar_event_id = created.id;
+
+    toast('Task added to Google Calendar!', 'success');
+    renderTasks();
+  } catch (err) {
+    if (err.message === 'popup_closed_by_user') {
+      toast('Calendar authorization cancelled', 'info');
+    } else {
+      toast(`Calendar error: ${err.message}`, 'error');
+    }
+  }
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -75,45 +161,31 @@ const TIER = {
 };
 
 // ── Achievement progress mapping ──────────────────────────────────────────────
-// Given an achievement key and user progress context, returns { current, required }
 
 function getAchievementProgress(key, progress) {
   const p = progress || achievementProgress;
-
-  // streak_N
   if (key.startsWith('streak_')) {
     const required = parseInt(key.split('_')[1]);
     return { current: Math.min(p.streak ?? 0, required), required };
   }
-  // tasks_N
   if (key.startsWith('tasks_')) {
     const required = parseInt(key.split('_')[1]);
     return { current: Math.min(p.tasks ?? 0, required), required };
   }
-  // goals_N
   if (key.startsWith('goals_')) {
     const required = parseInt(key.split('_')[1]);
     return { current: Math.min(p.goals ?? 0, required), required };
   }
-  // points_N
   if (key.startsWith('points_')) {
     const required = parseInt(key.split('_')[1]);
     return { current: Math.min(p.points ?? 0, required), required };
   }
-  // daily_N
   if (key.startsWith('daily_')) {
     const required = parseInt(key.split('_')[1]);
     return { current: Math.min(p.tasksToday ?? 0, required), required };
   }
-  // speed_1hour
-  if (key === 'speed_1hour') {
-    return { current: Math.min(p.quickTasks ?? 0, 1), required: 1 };
-  }
-  // speed_10
-  if (key === 'speed_10') {
-    return { current: Math.min(p.quickTasks ?? 0, 10), required: 10 };
-  }
-  // early_bird / night_owl — binary, no numeric progress
+  if (key === 'speed_1hour') return { current: Math.min(p.quickTasks ?? 0, 1),  required: 1  };
+  if (key === 'speed_10')    return { current: Math.min(p.quickTasks ?? 0, 10), required: 10 };
   return null;
 }
 
@@ -153,7 +225,9 @@ function renderTasks() {
     return;
   }
 
-  container.innerHTML = filtered.map(task => `
+  container.innerHTML = filtered.map(task => {
+    const onCalendar = Boolean(task.calendar_event_id);
+    return `
     <div class="task-card ${task.status === 'completed' ? 'completed' : ''}" data-id="${task.id}">
       <div class="task-title">${escapeHtml(task.title)}</div>
       <div class="task-meta">
@@ -183,12 +257,18 @@ function renderTasks() {
               ${icon('check', 13)} Complete
             </button>` : ''}
         ` : `<button class="complete-button" disabled>${icon('check', 13)} Done</button>`}
+        <button class="btn btn-secondary"
+          style="padding:8px 12px;font-size:13px;${onCalendar ? 'color:var(--orange);border-color:rgba(255,107,53,0.3);' : ''}"
+          data-action="calendar" data-id="${task.id}"
+          ${onCalendar ? 'disabled title="Already on your calendar"' : 'title="Add to Google Calendar"'}>
+          ${icon('calendar', 13)} ${onCalendar ? 'Added' : 'Schedule'}
+        </button>
         <button class="btn btn-danger" style="padding:8px 12px;font-size:13px;" data-action="delete" data-id="${task.id}">
           ${icon('x', 13)}
         </button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 // ── Render Goals ──────────────────────────────────────────────────────────────
@@ -301,15 +381,11 @@ function renderAchievementCard(a) {
     <div style="
       background:${locked ? 'rgba(0,0,0,0.2)' : tier.glow};
       border:1px solid ${locked ? 'rgba(255,255,255,0.06)' : tier.border};
-      border-radius:var(--radius);
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+      border-radius:var(--radius);padding:16px;
+      display:flex;flex-direction:column;gap:10px;
       transition:var(--transition);
     ">
       <div style="display:flex;gap:12px;align-items:flex-start;">
-        <!-- Icon -->
         <div style="
           width:40px;height:40px;flex-shrink:0;
           border-radius:var(--radius-sm);
@@ -322,8 +398,6 @@ function renderAchievementCard(a) {
             ? icon('lock', 16)
             : `<i data-lucide="${a.icon}" style="width:18px;height:18px;stroke:${tier.color};"></i>`}
         </div>
-
-        <!-- Text -->
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
             <span style="font-size:14px;font-weight:600;color:${locked ? 'rgba(255,255,255,0.3)' : '#f0f0f5'};">
@@ -350,8 +424,6 @@ function renderAchievementCard(a) {
           </div>
         </div>
       </div>
-
-      <!-- Progress bar (locked achievements with numeric progress only) -->
       ${locked && prog ? `
         <div>
           <div style="display:flex;justify-content:space-between;font-size:11px;
@@ -361,11 +433,9 @@ function renderAchievementCard(a) {
           </div>
           <div style="height:3px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;">
             <div style="
-              height:100%;
-              width:${pct}%;
+              height:100%;width:${pct}%;
               background:${tier.color};
-              border-radius:99px;
-              opacity:0.5;
+              border-radius:99px;opacity:0.5;
               transition:width 600ms ease;
             "></div>
           </div>
@@ -709,9 +779,13 @@ document.getElementById('tasks-container')?.addEventListener('click', e => {
   const btn = e.target.closest('[data-action]');
   if (!btn) return;
   const { action, id } = btn.dataset;
-  if (action === 'complete') updateTaskStatus(id, 'completed');
-  if (action === 'progress') updateTaskStatus(id, 'in_progress');
-  if (action === 'delete')   deleteTask(id);
+  if (action === 'complete')  updateTaskStatus(id, 'completed');
+  if (action === 'progress')  updateTaskStatus(id, 'in_progress');
+  if (action === 'delete')    deleteTask(id);
+  if (action === 'calendar') {
+    const task = allTasks.find(t => t.id === id);
+    if (task) addTaskToCalendar(task);
+  }
 });
 
 document.getElementById('goals-container')?.addEventListener('click', e => {
