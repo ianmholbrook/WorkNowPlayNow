@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Work Now, Play Now — Dashboard</title>
+  <link rel="stylesheet" href="/styles/index.css">
+  <link rel="icon" href="/favicon.ico">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+  <header>
+    <a href="/index.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
+      <img class="logo-img" src="/image/logo_512.png" alt="logo">
+      <div class="logo-text">
+        <span class="work">Work Now</span>, <span class="play">Play Now</span>
+      </div>
+    </a>
+    <div class="flex-spacer"></div>
+    <div id="header-badges" style="display:flex; gap:8px; align-items:center;">
+      <span class="streak-badge" id="header-streak"><i data-lucide="flame"></i> — day streak</span>
+      <span class="points-badge" id="header-points"><i data-lucide="star"></i> — pts</span>
+    </div>
+    <div class="banner-buttons" style="margin-left:16px;">
+      <button id="sign-out">Sign Out</button>
+    </div>
+    <div id="auth-status" class="auth-status"></div>
+  </header>
+
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">Navigation</div>
+      <button class="sidebar-item active" data-view="tasks">
+        <span class="icon"><i data-lucide="check-square"></i></span> Tasks
+      </button>
+      <button class="sidebar-item" data-view="goals">
+        <span class="icon"><i data-lucide="target"></i></span> Goals
+      </button>
+      <button class="sidebar-item" data-view="achievements">
+        <span class="icon"><i data-lucide="trophy"></i></span> Achievements
+      </button>
+
+      <div class="sidebar-section">Stats</div>
+      <div class="stat-card">
+        <div class="stat-label"><i data-lucide="flame"></i> Current Streak</div>
+        <div class="stat-value" id="sidebar-streak">—</div>
+        <div class="stat-sub" id="sidebar-streak-sub">days in a row</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i data-lucide="star"></i> Total Points</div>
+        <div class="stat-value" id="sidebar-points">—</div>
+        <div class="stat-sub">lifetime earned</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i data-lucide="clipboard-list"></i> Tasks Done</div>
+        <div class="stat-value" id="sidebar-tasks-done">—</div>
+        <div class="stat-sub">completed total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i data-lucide="trophy"></i> Achievements</div>
+        <div class="stat-value" id="sidebar-achievements">—</div>
+        <div class="stat-sub">unlocked</div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="app-main">
+
+      <!-- Tasks View -->
+      <div id="view-tasks">
+        <div class="app-main-header">
+          <h2>My Tasks</h2>
+          <button class="btn btn-primary" id="toggle-task-form">+ New Task</button>
+        </div>
+
+        <div id="task-form-wrapper" style="display:none;">
+          <form id="task-form" class="task-form">
+            <div>
+              <div class="task-form-title">Task Title *</div>
+              <input type="text" id="task-title" placeholder="What needs to be done?" required>
+            </div>
+            <div>
+              <div class="task-form-title">Category</div>
+              <select id="task-category">
+                <option value="">No category</option>
+              </select>
+            </div>
+            <div>
+              <div class="task-form-title">Goal (optional)</div>
+              <select id="task-goal">
+                <option value="">No goal</option>
+              </select>
+            </div>
+            <div>
+              <div class="task-form-title">Due Date (optional)</div>
+              <input type="datetime-local" id="task-due-date">
+            </div>
+            <div class="full-width">
+              <div class="task-form-title">Description (optional)</div>
+              <textarea id="task-description" placeholder="Any extra details..."></textarea>
+            </div>
+            <div class="full-width" style="display:flex; gap:10px; justify-content:flex-end;">
+              <button type="button" class="btn btn-ghost" id="cancel-task-form">Cancel</button>
+              <button type="submit" class="btn btn-primary">Add Task</button>
+            </div>
+          </form>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+          <button class="btn btn-secondary filter-btn active" data-filter="all">All</button>
+          <button class="btn btn-secondary filter-btn" data-filter="pending">Pending</button>
+          <button class="btn btn-secondary filter-btn" data-filter="in_progress">In Progress</button>
+          <button class="btn btn-secondary filter-btn" data-filter="completed">Completed</button>
+        </div>
+
+        <div id="tasks-container" class="tasks-grid"></div>
+      </div>
+
+      <!-- Goals View -->
+      <div id="view-goals" style="display:none;">
+        <div class="app-main-header">
+          <h2>My Goals</h2>
+          <button class="btn btn-primary" id="toggle-goal-form">+ New Goal</button>
+        </div>
+
+        <div id="goal-form-wrapper" style="display:none;">
+          <form id="goal-form" class="task-form" style="grid-template-columns:1fr;">
+            <div>
+              <div class="task-form-title">Goal Title *</div>
+              <input type="text" id="goal-title" placeholder="What do you want to achieve?" required>
+            </div>
+            <div>
+              <div class="task-form-title">Description (optional)</div>
+              <textarea id="goal-description" placeholder="Describe your goal..."></textarea>
+            </div>
+            <div>
+              <div class="task-form-title" style="display:flex;align-items:center;justify-content:space-between;">
+                <span>Assign Tasks * <span style="font-weight:400;color:rgba(255,255,255,0.2);">(minimum 3)</span></span>
+                <span id="goal-task-count" style="color:rgba(255,255,255,0.3);font-size:12px;">0 selected</span>
+              </div>
+              <div id="goal-task-picker" style="margin-top:8px;max-height:240px;overflow-y:auto;padding-right:4px;">
+                <p style="color:rgba(255,255,255,0.3);font-size:13px;padding:8px 0;">Loading tasks...</p>
+              </div>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+              <button type="button" class="btn btn-ghost" id="cancel-goal-form">Cancel</button>
+              <button type="submit" class="btn btn-primary" id="goal-submit-btn" disabled title="Select at least 3 tasks">
+                Create Goal
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div id="goals-container" class="tasks-grid"></div>
+      </div>
+
+      <!-- Achievements View -->
+      <div id="view-achievements" style="display:none;">
+        <div class="app-main-header">
+          <h2>Achievements</h2>
+        </div>
+        <div id="achievements-container" class="tasks-grid"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+    </div>
+    <div>&copy; 2026 Work Now, Play Now. All rights reserved.</div>
+  </footer>
+
+  <script type="module" src="/js/auth.js"></script>
+  <script type="module" src="/js/app.js"></script>
+  <script>lucide.createIcons();</script>
+
+</body>
+</html>
