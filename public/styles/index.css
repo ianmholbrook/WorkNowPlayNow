@@ -17,7 +17,7 @@
   --bg:            #faf8f4;
   --bg-card:       #ffffff;
   --bg-card-hover: #f5f2ec;
-  --bg-dark:       #1e1c3a;
+  --bg-dark:       #1a1830;
   --bg-dark-card:  #2d2b55;
   --bg-input:      #f0ece4;
   --border:        rgba(0,0,0,0.08);
@@ -667,7 +667,7 @@ footer {
 }
 .goal-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--blue), var(--orange));
+  background: linear-gradient(90deg, var(--blue-bright), var(--orange));
   border-radius: 99px;
   transition: width 600ms ease;
 }

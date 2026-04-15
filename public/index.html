@@ -13,10 +13,12 @@
 <body>
 
   <header>
-    <img class="logo-img" src="/image/logo_512.png" alt="Work Now Play Now logo">
-    <div class="logo-text">
-      <span class="work">Work Now</span>, <span class="play">Play Now</span>
-    </div>
+    <a href="/index.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
+      <img class="logo-img" src="/image/logo_512.png" alt="Work Now Play Now logo">
+      <div class="logo-text">
+        <span class="work">Work Now</span>, <span class="play">Play Now</span>
+      </div>
+    </a>
     <div class="flex-spacer"></div>
     <div class="banner-buttons">
       <button id="sign-up">Sign Up</button>
@@ -47,10 +49,10 @@
     <section class="hero">
       <div class="hero-content">
         <span class="tag eyebrow">Gamified Productivity</span>
-        <h1>Do the work.<br><span class="accent-orange">Earn the play.</span></h1>
+        <h1><span style="color:var(--blue);">Do the work.</span><br><span class="accent-orange">Earn the play.</span></h1>
         <p class="tagline">Turn your goals into quests, your tasks into victories, and your consistency into rewards.</p>
         <div class="hero-actions">
-          <button class="cta-button" id="hero-signup">Get Started — It is Free</button>
+          <button class="cta-button" id="hero-signup">Let's Go - Launch App</button>
           <button class="btn btn-secondary" id="hero-login">Sign In</button>
         </div>
       </div>
@@ -87,7 +89,7 @@
         <div class="feature-card">
           <div class="icon"><i data-lucide="calendar"></i></div>
           <h3>Calendar Sync</h3>
-          <p>Integrate with Google or Apple Calendar to keep tasks and life in one place.</p>
+          <p>Integrate with Google Calendar to keep tasks and life in one place.</p>
         </div>
       </div>
     </section>
@@ -95,7 +97,16 @@
     <section class="about-section">
       <div class="about-row">
         <div class="about-wrapper">
-          <img src="https://picsum.photos/seed/theteam/1200/700" alt="The Team">
+          <!-- <img src="/image/team.jpg" alt="The Team"> -->
+          <div style="
+            width:100%;height:260px;
+            background:linear-gradient(135deg, var(--blue) 0%, #1e1c3a 100%);
+            display:flex;align-items:center;justify-content:center;
+            flex-direction:column;gap:12px;
+          ">
+            <i data-lucide="users" style="width:48px;height:48px;stroke:rgba(255,255,255,0.3);"></i>
+            <span style="color:rgba(255,255,255,0.25);font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Team photo coming soon</span>
+          </div>
           <span>The Team</span>
         </div>
         <div class="blurb">
@@ -107,7 +118,16 @@
       </div>
       <div class="about-row reverse">
         <div class="about-wrapper">
-          <img src="https://picsum.photos/seed/themission/1200/700" alt="The Mission">
+          <!-- <img src="/image/mission.jpg" alt="The Mission"> -->
+          <div style="
+            width:100%;height:260px;
+            background:linear-gradient(135deg, #1e1c3a 0%, var(--orange-dim) 100%);
+            display:flex;align-items:center;justify-content:center;
+            flex-direction:column;gap:12px;
+          ">
+            <i data-lucide="rocket" style="width:48px;height:48px;stroke:rgba(255,255,255,0.3);"></i>
+            <span style="color:rgba(255,255,255,0.25);font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Mission photo coming soon</span>
+          </div>
           <span>The Mission</span>
         </div>
         <div class="blurb">
@@ -132,7 +152,7 @@
   <script type="module" src="/js/auth.js"></script>
   <script type="module">
     document.getElementById("hero-signup")?.addEventListener("click", () => {
-      document.getElementById("sign-up")?.click();
+      window.location.href = '/app.html';
     });
     document.getElementById("hero-login")?.addEventListener("click", () => {
       document.getElementById("login")?.click();
