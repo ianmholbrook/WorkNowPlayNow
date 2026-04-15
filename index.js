@@ -5,6 +5,13 @@ const app = express();
 const path = require('path');
 const cors = require('cors');
 
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] !== 'https') {
+    return res.redirect(301, `https://${req.host}${req.url}`);
+  }
+  next();
+});
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
