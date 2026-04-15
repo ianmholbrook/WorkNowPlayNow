@@ -38,11 +38,11 @@
       ">
         <div>
           <label style="font-size:13px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">Your Name</label>
-          <input type="text" id="contact-name" placeholder="Contact Name">
+          <input type="text" id="contact-name" placeholder="John Doe">
         </div>
         <div>
           <label style="font-size:13px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">Your Email</label>
-          <input type="email" id="contact-email" placeholder="you@email.com">
+          <input type="email" id="contact-email" placeholder="you@example.com">
         </div>
         <div>
           <label style="font-size:13px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">Message</label>
@@ -61,7 +61,10 @@
         font-size:14px;
         line-height:1.7;
       ">
-    
+        Or reach us directly at
+        <a href="mailto:contact@worknowplaynow.com" style="color:var(--orange);font-weight:600;">
+          contact@worknowplaynow.com
+        </a>
       </div>
 
     </div>
@@ -93,7 +96,7 @@
       // Opens default mail client with pre-filled message
       const subject = encodeURIComponent(`Message from ${name} via worknowplaynow.com`);
       const body    = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n${message}`);
-      window.location.href = `mailto:ianmholbrook@gmail.com?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:contact@worknowplaynow.com?subject=${subject}&body=${body}`;
     }
   </script>
 
