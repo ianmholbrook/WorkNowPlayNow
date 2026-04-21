@@ -167,6 +167,7 @@ header {
 .logo-img {
   height: 36px;
   width: 36px;
+  flex-shrink: 0;
   filter: drop-shadow(0 0 8px rgba(255,107,53,0.5));
 }
 
@@ -208,6 +209,30 @@ header {
 .auth-status {
   font-size: 12px;
   color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+/* ── Hamburger button (mobile only) ── */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: var(--transition);
 }
 
 /* ── Footer ── */
@@ -351,9 +376,7 @@ footer {
   display: inline-block;
   margin-bottom: 20px;
 }
-.hero-content h1 {
-  margin-bottom: 20px;
-}
+.hero-content h1 { margin-bottom: 20px; }
 .hero-content h1 .accent-blue  { color: var(--blue); }
 .hero-content h1 .accent-orange { color: var(--orange); }
 .hero-content .tagline {
@@ -377,10 +400,7 @@ footer {
   max-width: 1100px;
   margin: 0 auto;
 }
-.features > h2 {
-  text-align: center;
-  margin-bottom: 48px;
-}
+.features > h2 { text-align: center; margin-bottom: 48px; }
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -398,10 +418,7 @@ footer {
   transform: translateY(-2px);
   box-shadow: var(--shadow);
 }
-.feature-card .icon {
-  font-size: 28px;
-  margin-bottom: 14px;
-}
+.feature-card .icon { font-size: 28px; margin-bottom: 14px; }
 .feature-card h3 { margin-bottom: 8px; }
 .feature-card p  { color: var(--text-muted); font-size: 14px; }
 
@@ -620,8 +637,8 @@ footer {
   border-radius: 99px;
   font-weight: 600;
 }
-.task-status.pending    { background: rgba(255,200,0,0.1); color: #ffc800; border: 1px solid rgba(255,200,0,0.2); }
-.task-status.completed  { background: rgba(0,200,100,0.1); color: #00c864; border: 1px solid rgba(0,200,100,0.2); }
+.task-status.pending     { background: rgba(255,200,0,0.1);  color: #ffc800; border: 1px solid rgba(255,200,0,0.2);  }
+.task-status.completed   { background: rgba(0,200,100,0.1);  color: #00c864; border: 1px solid rgba(0,200,100,0.2);  }
 .task-status.in_progress { background: var(--blue-glow); color: var(--blue-bright); border: 1px solid rgba(79,142,247,0.25); }
 
 .task-description {
@@ -633,6 +650,7 @@ footer {
   display: flex;
   gap: 8px;
   margin-top: auto;
+  flex-wrap: wrap;
 }
 .complete-button {
   flex: 1;
@@ -737,9 +755,7 @@ footer {
 .empty-state p  { font-size: 14px; }
 
 /* ── Icons ── */
-.icon svg, .feature-card .icon svg {
-  display: block;
-}
+.icon svg, .feature-card .icon svg { display: block; }
 .feature-card .icon {
   width: 40px;
   height: 40px;
@@ -758,38 +774,124 @@ footer {
   vertical-align: middle;
   margin-right: 3px;
 }
-.empty-state .empty-icon svg {
-  width: 40px;
-  height: 40px;
-  opacity: 0.3;
-}
-.complete-button svg, .btn svg {
-  display: inline;
-  vertical-align: middle;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .app-layout { grid-template-columns: 1fr; }
-  .sidebar { display: none; }
-  .about-row { flex-direction: column; }
-  .task-form { grid-template-columns: 1fr; }
-}
+.empty-state .empty-icon svg { width: 40px; height: 40px; opacity: 0.3; }
+.complete-button svg, .btn svg { display: inline; vertical-align: middle; }
 
 /* Fix filter button colors on dark dashboard */
 .app-main .filter-btn.btn-secondary {
   color: rgba(255,255,255,0.85);
   border-color: rgba(255,255,255,0.15);
 }
-
 .app-main .filter-btn.btn-secondary:hover {
   background: rgba(255,255,255,0.08);
   color: #ffffff;
 }
-
-/* Active state */
 .app-main .filter-btn.active {
   background: var(--orange);
   color: #ffffff;
   border-color: var(--orange);
+}
+
+/* ── Sidebar overlay (mobile) ── */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 200;
+  backdrop-filter: blur(2px);
+}
+.sidebar-overlay.open { display: block; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+
+  /* Header */
+  header {
+    padding: 0 16px;
+    gap: 8px;
+  }
+
+  .logo-text {
+    font-size: 16px;
+  }
+
+  /* Hide badges and email in app header on mobile — shown in sidebar instead */
+  #header-badges { display: none !important; }
+  .auth-status   { display: none; }
+
+  /* Show hamburger */
+  .hamburger { display: flex; }
+
+  /* Landing page header — hide logo text on very small screens */
+  .banner-buttons button {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  /* App layout — full width, no sidebar column */
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sidebar becomes a fixed overlay panel */
+  .sidebar {
+    position: fixed;
+    top: 64px;
+    left: -260px;
+    width: 260px;
+    height: calc(100vh - 64px);
+    z-index: 300;
+    transition: left 250ms ease;
+    overflow-y: auto;
+  }
+  .sidebar.open {
+    left: 0;
+  }
+
+  /* Main content takes full width */
+  .app-main {
+    padding: 20px 16px;
+    width: 100%;
+  }
+
+  /* Task form single column */
+  .task-form {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  /* Tasks grid single column */
+  .tasks-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* About section stacks */
+  .about-row,
+  .about-row.reverse {
+    flex-direction: column;
+  }
+
+  /* Hero actions stack */
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Toast narrower on mobile */
+  .toast { max-width: calc(100vw - 48px); }
+  .toast-container { left: 24px; right: 24px; }
+
+  .banner-buttons {
+    display: none !important;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-text { display: none; }
+  header { gap: 4px; }
 }
