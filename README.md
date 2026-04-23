@@ -21,7 +21,7 @@ Work Now, Play Now is a JavaScript-based task tracker designed to increase produ
 ### Building From Source Code
 1. **Clone the repository:**
    
-	```git clone https://github.com/Robonics/WorkNowPlayNow/tree/master cd worknowplaynow ```
+git clone https://github.com/Robonics/WorkNowPlayNow/tree/master cd worknowplaynow 
    
 3. **Install Dependencies:**
 
