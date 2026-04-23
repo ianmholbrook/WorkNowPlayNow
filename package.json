@@ -1,12 +1,13 @@
 {
   "name": "worknowplaynow",
-  "version": "predev-1",
-  "description": "A tool designed to help users plan, and reward them for enacting their plans",
+  "version": "1.0.0",
+  "description": "A gamified productivity app that helps users plan tasks and goals, and rewards them for following through.",
   "main": "index.js",
   "scripts": {
-    "start": "node ."
+    "start": "node index.js",
+    "dev": "node --watch index.js"
   },
-  "author": "Ezra Holloway, Ian Holbrook Katie Hickman, Joshua Garcia",
+  "author": "Ezra Holloway, Ian Holbrook, Katie Hickman, Joshua Garcia",
   "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.102.1",
