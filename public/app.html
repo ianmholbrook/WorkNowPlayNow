@@ -23,6 +23,34 @@
       <span class="streak-badge" id="header-streak"><i data-lucide="flame"></i> — day streak</span>
       <span class="points-badge" id="header-points"><i data-lucide="star"></i> — pts</span>
     </div>
+    <div id="notif-container" style="position: relative; margin-left: 12px;">
+      <button id="notif-bell" style="cursor:pointer;">🔔</button>
+
+      <span id="notif-count" style="
+        display:none;
+        position:absolute;
+        top:-5px;
+        right:-5px;
+        background:red;
+        color:white;
+        border-radius:50%;
+        padding:2px 6px;
+        font-size:12px;
+      "></span>
+
+      <div id="notif-dropdown" style="
+        display:none;
+        position:absolute;
+        right:0;
+        top:30px;
+        background:white;
+        border:1px solid #ccc;
+        width:300px;
+        max-height:300px;
+        overflow-y:auto;
+        z-index:1000;
+      "></div>
+    </div>
     <div class="banner-buttons" style="margin-left:16px;">
       <button id="sign-out">Sign Out</button>
     </div>

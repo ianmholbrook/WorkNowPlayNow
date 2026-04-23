@@ -122,7 +122,19 @@ function renderTasks() {
         ${getGoalTitle(task.goal_id) ? `<span class="task-category" style="background:rgba(255,107,53,0.1);color:var(--orange);border-color:rgba(255,107,53,0.25);">${icon('target', 11)} ${escapeHtml(getGoalTitle(task.goal_id))}</span>` : ''}
       </div>
       ${task.description ? `<div class="task-description">${escapeHtml(task.description)}</div>` : ''}
-      ${task.due_date ? `<div class="task-description" style="color:#ffc800;display:flex;align-items:center;gap:5px;">${icon('clock', 13)} Due ${new Date(task.due_date).toLocaleDateString()}</div>` : ''}
+      ${task.due_date ? `
+        <div class="task-description" style="color:#ffc800;display:flex;align-items:center;gap:5px;">
+          ${icon('clock', 13)} Due ${new Date(task.due_date).toLocaleDateString()}
+        </div>` : ''}
+        ${task.subtasks?.length ? `
+          <div style="margin-top:10px; padding-left:10px; border-left:2px solid rgba(255,255,255,0.1);">
+          ${task.subtasks.map(st => `
+            <div style="font-size:13px; opacity:0.8; margin:2px 0;">
+            ${st.completed ? '✔' : '⬜'} ${escapeHtml(st.title)}
+            </div>
+            `).join('')}
+            </div>
+            ` : ''}
       <div class="task-actions">
         ${task.status !== 'completed' ? `
           ${task.status === 'pending' ? `<button class="complete-button" data-action="progress" data-id="${task.id}">${icon('play', 13)} Start</button>` : ''}
@@ -741,5 +753,74 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (!session) return;
   const authStatus = document.getElementById('auth-status');
   if (authStatus) authStatus.textContent = session.user.email;
-  await Promise.all([loadCategories(), loadTasks(), loadGoals(), loadStats()]);
+
+  await Promise.all([loadCategories(), loadTasks(), loadGoals(), loadStats(), loadNotifications()]);
+});
+
+async function loadNotifications() {
+  try {
+    const data = await apiFetch('/notifications');
+    if (!data) return;
+    renderNotifications(data.notifications ?? []);
+  } catch (err) {
+    console.error('Notifications failed:', err.message);
+  }
+}
+
+function renderNotifications(notifs) {
+  const dropdown = document.getElementById('notif-dropdown');
+  const countEl = document.getElementById('notif-count');
+
+  if (!dropdown || !countEl) return;
+
+  dropdown.innerHTML = '';
+
+  const unread = notifs.filter(n => !n.is_read).length;
+
+  if (unread > 0) {
+    countEl.style.display = 'block';
+    countEl.textContent = unread;
+  } else {
+    countEl.style.display = 'none';
+  }
+
+  notifs.forEach(n => {
+    const div = document.createElement('div');
+
+    div.innerHTML = `
+      <div style="padding:10px;">
+        <p style="margin:0;">${escapeHtml(n.message)}</p>
+        <small>${new Date(n.created_at).toLocaleString()}</small>
+      </div>
+    `;
+
+    div.style.borderBottom = '1px solid #eee';
+    div.style.cursor = 'pointer';
+    div.style.background = n.is_read ? '#fff' : '#f0f8ff';
+
+    div.onclick = () => markNotificationRead(n.id);
+
+    dropdown.appendChild(div);
+  });
+}
+
+async function markNotificationRead(id) {
+  try {
+    await apiFetch(`/notifications/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ is_read: true })
+    });
+
+    await loadNotifications();
+  } catch (err) {
+    console.error(err.message);
+  }
+}
+
+document.getElementById('notif-bell')?.addEventListener('click', () => {
+  const dropdown = document.getElementById('notif-dropdown');
+  if (!dropdown) return;
+
+ const isHidden = dropdown.style.display === 'none' || !dropdown.style.display;
+  dropdown.style.display = isHidden ? 'block' : 'none';
 });

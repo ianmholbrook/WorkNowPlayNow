@@ -1,9 +1,11 @@
-require('dotenv').config({ path: '.env.local' });
-
+require('dotenv').config();
+console.log("SUPABASE_ANON_KEY:", process.env.SUPABASE_ANON_KEY);
+console.log("ENV CHECK:", process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY ? "KEY_OK" : "KEY_MISSING");
 const express = require('express');
 const app = express();
 const path = require('path');
 const cors = require('cors');
+const subtasksRouter = require('./routes/subtasks');
 
 // Force HTTPS in production
 app.use((req, res, next) => {
@@ -16,6 +18,7 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/subtasks', subtasksRouter);
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
