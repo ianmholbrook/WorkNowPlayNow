@@ -19,20 +19,31 @@ Work Now, Play Now is a JavaScript-based task tracker designed to increase produ
 -Access the full web application at https://worknowplaynow.com/
 
 ### Building From Source Code
-1. **Clone the repository:**  
+1. **Clone the repository:**
+   
      git clone https://github.com/Robonics/WorkNowPlayNow/tree/master
      cd worknowplaynow
-2. Install Dependencies
+   
+2. **Install Dependencies:**
+
     npm install
-3. Set up Environmental Variable  
+   
+3. **Set up Environmental Variable:**
+   
    Create the file .env.local int the root of the project:  
    SUPABASE_URL=your_superbase_project_url_here
 	SUPABASE_ANON_KEY=your_superbase_anon_key_here
-4. Set up the Database
-   In your Supabase ptoject, run the SQL from database/schema.sql  
-5. Run the App  
+
+4. **Set up the Database:**
+   
+   In your Supabase ptoject, run the SQL from database/schema.sql
+   
+5. **Run the App:**
+    
    Use either node index.js or node.
-6. (Optional) Google OAuth and Calender Set up
+   
+7. **(Optional) Google OAuth and Calender Set up:**
+   
    To use the Google SIgn-In and Calender integration locally you need to
    - Go to [Google Cloud Console] (https://console.cloud.google.com)
    - Add “https://localhost:8080” to **Authorized JavaScript Origins** on yout OAuth credentials
