@@ -30,7 +30,23 @@
         <i data-lucide="bell" style="width:18px;height:18px;"></i>
         <span id="notif-count"></span>
       </button>
-    </div>
+
+      <div id="notif-dropdown" style="
+      display:none;
+      position:absolute;
+      right:0;
+      top:30px;
+      background:white;
+      border:1px solid #ccc;
+      width:300px;
+      max-height:300px;
+      overflow-y:auto;
+      z-index:1000;
+      padding:10px;
+      ">
+      <p>No notifications</p>
+  </div>
+</div>
 
     <div class="banner-buttons" style="margin-left:8px;">
       <button id="sign-out">Sign Out</button>

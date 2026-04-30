@@ -1,4 +1,6 @@
 // ── Helpers ──────────────────────────────────────────────────────────────────
+const notified = new Set();
+JSON.parse(localStorage.getItem('notifiedTasks') || '[]').forEach(id => notified.add(id));
 
 function toast(message, type = 'info') {
   const container = document.getElementById('toast-container');
@@ -755,6 +757,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (authStatus) authStatus.textContent = session.user.email;
 
   await Promise.all([loadCategories(), loadTasks(), loadGoals(), loadStats(), loadNotifications()]);
+  
+  checkOneHourWarnings();
+  setInterval(checkOneHourWarnings, 60000);
 });
 
 async function loadNotifications() {
@@ -764,6 +769,37 @@ async function loadNotifications() {
     renderNotifications(data.notifications ?? []);
   } catch (err) {
     console.error('Notifications failed:', err.message);
+  }
+}
+
+async function checkOneHourWarnings() {
+  try {
+    const data = await apiFetch('/tasks');
+    const tasks = data.tasks ?? data;
+
+    const now = new Date();
+
+    tasks.forEach(task => {
+      if (!task.due_date) return;
+
+      const due = new Date(task.due_date);
+      const diff = (due - now) / 1000;
+
+      const oneHour = 3600;
+
+      if (diff > 0 && diff <= oneHour) {
+        if (notified.has(task.id)) return;
+        notified.add(task.id);
+        localStorage.setItem('notifiedTasks', JSON.stringify([...notified]));
+
+        createLocalNotification({
+          message: `"${task.title}" is due in 1 hour`
+        });
+      }
+    });
+
+  } catch (err) {
+    console.error('1-hour check failed:', err);
   }
 }
 
@@ -777,6 +813,7 @@ function renderNotifications(notifs) {
 
   const unread = notifs.filter(n => !n.is_read).length;
 
+  // badge logic
   if (unread > 0) {
     countEl.style.display = 'block';
     countEl.textContent = unread;
@@ -784,6 +821,17 @@ function renderNotifications(notifs) {
     countEl.style.display = 'none';
   }
 
+  // EMPTY STATE
+  if (!notifs || notifs.length === 0) {
+    const empty = document.createElement('div');
+    empty.textContent = 'No notifications';
+    empty.style.padding = '10px';
+    empty.style.color = '#666';
+    dropdown.appendChild(empty);
+    return;
+  }
+
+  // NOTIFICATIONS
   notifs.forEach(n => {
     const div = document.createElement('div');
 
@@ -802,6 +850,23 @@ function renderNotifications(notifs) {
 
     dropdown.appendChild(div);
   });
+}
+
+function createLocalNotification(notification) {
+  const dropdown = document.getElementById('notif-dropdown');
+  if (!dropdown) return;
+
+  const div = document.createElement('div');
+  div.style.padding = '10px';
+  div.style.borderBottom = '1px solid #eee';
+  div.style.background = '#f0f8ff';
+
+  div.innerHTML = `
+    <p style="margin:0;">${escapeHtml(notification.message)}</p>
+    <small>just now</small>
+  `;
+
+  dropdown.prepend(div);
 }
 
 async function markNotificationRead(id) {
